@@ -1,12 +1,43 @@
-nodejs_server:
-  build: ./nodejs_server/
-#  ports:
-#    - "8080:8080"
+version: "3.9"
 
-nginx:
-  build: ./nginx/
-  ports:
-    - "80:80"
-    - "443:443"
-  links:
-    - nodejs_server:nodejs_server
+services:
+  nodejs_server:
+    build:
+      context: ./nodejs_server
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      ALLOWED_ORIGINS: https://localhost
+    expose:
+      - "8080"
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:8080/health', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - nodejs_server
+    volumes:
+      - ./certs:/etc/nginx/ssl:ro
+    networks:
+      - backend
+    restart: unless-stopped
+
+networks:
+  backend:
