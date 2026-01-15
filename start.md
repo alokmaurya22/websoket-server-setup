@@ -3,7 +3,9 @@
 This guide shows how to run the project locally with HTTPS + WSS using Docker.
 
 ## 0) Prerequisites
-- Docker Desktop is running
+- Docker Desktop is running (open the app and wait for "Engine running")
+  - Quick check: `docker info` should work without errors.
+  - If you see a `dockerDesktopLinuxEngine` error later, the engine isn't running yet.
 - Node.js 18+ and Git are installed
 
 ## 1) Clone the repo
@@ -15,7 +17,7 @@ cd websocket-server-setup
 ## 2) Install Node dependencies (optional)
 This is optional for Docker runs, but keeps `package-lock.json` up to date.
 ```powershell
-cd nodejs_server
+cd nodejs_websocket_server
 npm install
 cd ..
 ```
@@ -28,12 +30,16 @@ docker run --rm -v "${PWD}/certs:/certs" alpine:3.19 sh -c "apk add --no-cache o
 
 ## 4) Build images
 ```powershell
-docker-compose build
+docker compose build
 ```
 
 ## 5) Start containers
 ```powershell
-docker-compose up -d
+docker compose up -d
+```
+Optional quick check:
+```powershell
+docker compose ps
 ```
 
 ## 6) Accept the SSL cert in the browser
@@ -94,10 +100,18 @@ Expected:
 
 ## 9) View server logs (optional)
 ```powershell
-docker-compose logs -f nodejs_server
+docker compose logs -f nodejs_server
 ```
 
 ## 10) Stop containers
 ```powershell
-docker-compose down
+docker compose down
 ```
+
+## Troubleshooting
+- Docker engine not reachable:
+  - Error: `error during connect: ... dockerDesktopLinuxEngine`
+  - Fix: start Docker Desktop, wait for "Engine running", then retry `docker compose up -d`.
+- `nodejs_server` unhealthy:
+  - Check logs: `docker compose logs -f nodejs_server`
+  - Make sure the `/health` endpoint is reachable: `https://localhost/health`.
